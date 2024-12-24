@@ -1,6 +1,6 @@
 {
   "name": "mochimo-wots-v2",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "TypeScript implementation of Mochimo WOTS v2",
   "main": "dist/index.umd.js",
   "module": "dist/index.es.js",
