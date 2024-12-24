@@ -31,14 +31,13 @@ export class MochimoHasher {
         }
 
         const data = buffer.subarray(offset, offset + length);
-        
         // Create a WordArray directly from bytes
         const words: number[] = new Array(Math.ceil(data.length / 4));
         for (let i = 0; i < data.length; i += 4) {
             words[i >> 2] = ((data[i] || 0) << 24) |
-                           ((data[i + 1] || 0) << 16) |
-                           ((data[i + 2] || 0) << 8) |
-                           (data[i + 3] || 0);
+                ((data[i + 1] || 0) << 16) |
+                ((data[i + 2] || 0) << 8) |
+                (data[i + 3] || 0);
         }
 
         this.hasher.update(lib.WordArray.create(words, data.length));
@@ -66,5 +65,22 @@ export class MochimoHasher {
         this.hasher = algo.SHA256.create();
 
         return result;
+    }
+
+    /**
+     * Performs Mochimo's SHA-256 hash
+     */
+    static hash(data: ByteArray): ByteArray;
+    static hash(data: ByteArray, offset: number, length: number): ByteArray;
+    static hash(data: ByteArray, offset?: number, length?: number): ByteArray {
+        const hasher = new MochimoHasher();
+
+        if (offset !== undefined && length !== undefined) {
+            hasher.update(data.subarray(offset, offset + length));
+        } else {
+            hasher.update(data);
+        }
+
+        return hasher.digest();
     }
 }

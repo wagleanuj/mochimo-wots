@@ -1,3 +1,3 @@
-export * from './wots';
-export * from './wallet';
-export * from './hash';
+export * from './protocol/wots';
+export * from './protocol/wallet';
+export * from './protocol/hash';
