@@ -214,8 +214,10 @@ export class WOTS {
      * Generates a WOTS address using the componentsGenerator. 
      * Note:: use you own componentsGenerator that fills in deterministic bytes if you want to generate a specific address
      */
-    static generateAddress(tag: ByteArray | null, secret: ByteArray, componentsGenerator: (wotsSeed: ByteArray) => { private_seed: ByteArray, public_seed: ByteArray, addr_seed: ByteArray } = makeTestAddressComponents): ByteArray {
-
+    static generateAddress(tag: ByteArray | null, secret: ByteArray, componentsGenerator: (wotsSeed: ByteArray) => { private_seed: ByteArray, public_seed: ByteArray, addr_seed: ByteArray } ): ByteArray {
+        if(!componentsGenerator){
+            throw new Error('Invalid componentsGenerator');
+        }   
         if (secret.length !== 32) {
             throw new Error('Invalid secret length');
         }

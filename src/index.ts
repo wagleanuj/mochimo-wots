@@ -1,7 +1,7 @@
 // Core WOTS functionality
 export { WOTS } from './protocol/wots';
 export { Tag } from './protocol/tag';
-export { Wallet } from './protocol/wallet';
+export { WOTSWallet } from './protocol/wallet';
 
 // ByteBuffer utilities
 export { ByteBuffer, ByteOrder } from './types/byte-buffer';
