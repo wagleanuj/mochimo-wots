@@ -52,7 +52,7 @@ export class ByteBuffer {
             return this.pos;
         }
         if (newPosition < 0 || newPosition > this.buf.length) {
-            throw new Error('Invalid position');
+            throw new Error('Invalid position, position: ' + newPosition + ', length: ' + this.buf.length);
         }
         this.pos = newPosition;
         return this;

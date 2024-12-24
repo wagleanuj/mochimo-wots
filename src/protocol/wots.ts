@@ -168,18 +168,7 @@ export class WOTS {
         }
     }
 
-    /**
-     * Signs a message using WOTS
-     */
-    static wotsSign(sourceSeed: string, msg: ByteArray) {
-        const seed = ByteUtils.hexToBytes(sourceSeed);
-        const pk = seed.subarray(0, WOTS.WOTSSIGBYTES);
-        const pubSeed = seed.subarray(WOTS.WOTSSIGBYTES, WOTS.WOTSSIGBYTES + 32);
-        const rnd2 = seed.subarray(WOTS.WOTSSIGBYTES + 32, WOTS.WOTSSIGBYTES + 64);
-        const sig = new Uint8Array(WOTS.WOTSSIGBYTES);
-        this.wots_sign(sig, msg, seed, pubSeed, 0, rnd2);
-        return sig;
-    }
+
 
     /**
      * Verifies a WOTS signature
@@ -227,7 +216,7 @@ export class WOTS {
         const sourcePK = new Uint8Array(2144);
         const components = componentsGenerator(secret);
 
-        WOTS.wots_pkgen(sourcePK, components.private_seed, components.public_seed, 0, components.addr_seed);
+        WOTS.wots_pkgen(sourcePK, secret, components.public_seed, 0, components.addr_seed);
 
         const sourceAddress = new Uint8Array(2208);
         sourceAddress.set(sourcePK, 0);

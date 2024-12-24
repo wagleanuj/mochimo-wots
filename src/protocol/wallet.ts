@@ -30,19 +30,32 @@ export class WOTSWallet implements WOTSWalletJSON {
     public readonly tag: ByteArray | null;
     public tagHex: string | null;
     public readonly secret: ByteArray | null;
+
     /**
      * Creates a new WOTS wallet
      */
-    constructor(params: WOTSWalletParams) {
-        this.name = params.name || null;
-        this.address = params.address ? new Uint8Array(params.address) : null;
-        this.tag = params.tag ? new Uint8Array(params.tag) : null;
-        this.secret = params.secret ? new Uint8Array(params.secret) : null;
+    private constructor({ 
+        name = null, 
+        address = null, 
+        tag = null, 
+        secret = null 
+    }: {
+        name?: string | null;
+        address?: ByteArray | null;
+        tag?: ByteArray | null;
+        secret?: ByteArray | null;
+    }) {
+        this.name = name;
+        this.address = address;
+        this.tag = tag;
+        this.secret = secret;
+
 
         // Initialize hex strings
         this.addressHex = this.address ? ByteUtils.bytesToHex(this.address) : null;
         this.tagHex = this.tag ? ByteUtils.bytesToHex(this.tag) : null;
     }
+
     getName() {
         return this.name;
     }
@@ -77,8 +90,42 @@ export class WOTSWallet implements WOTSWalletJSON {
      * @returns 
      */
     sign(data: ByteArray): ByteArray {
-        if (!this.secret) throw new Error("Secret is not set");
-        return WOTS.wotsSign(ByteUtils.bytesToHex(this.secret), data);
+        const sourceSeed = this.secret;
+        const sourceWots = this.address;
+        if(!sourceSeed || !sourceWots) {
+            throw new Error('Cannot sign without secret key or address');
+        }
+        if(sourceSeed.length !== 32) {
+            throw new Error('Invalid sourceSeed length, expected 32, got ' + sourceSeed.length);
+        }
+        if(sourceWots.length !== 2208) {
+            throw new Error('Invalid sourceWots length, expected 2208, got ' + sourceWots.length);
+        }
+        const pk = sourceWots.subarray(0, WOTS.WOTSSIGBYTES);
+        const pubSeed = sourceWots.subarray(WOTS.WOTSSIGBYTES, WOTS.WOTSSIGBYTES + 32);
+        const rnd2 = sourceWots.subarray(WOTS.WOTSSIGBYTES + 32, WOTS.WOTSSIGBYTES + 64);
+        const sig = new Uint8Array(WOTS.WOTSSIGBYTES);
+        WOTS.wots_sign(sig, data, sourceSeed, pubSeed, 0, rnd2);
+        return sig;
+    }
+    /**
+     * Verifies whether a signature is valid for a given message
+     * @param message 
+     * @param signature 
+     * @returns 
+     */
+
+    verify(message: ByteArray, signature: ByteArray): boolean {
+        if(!this.address) {
+            throw new Error('Cannot verify without public key (address)');
+        }
+        const srcAddr = this.address;
+        const pk = srcAddr.subarray(0, WOTS.WOTSSIGBYTES);
+        const pubSeed = srcAddr.subarray(WOTS.WOTSSIGBYTES, WOTS.WOTSSIGBYTES + 32);
+        const rnd2 = srcAddr.subarray(WOTS.WOTSSIGBYTES + 32, WOTS.WOTSSIGBYTES + 64);
+
+        const computedPublicKey = WOTS.wots_pk_from_sig(signature, message, pubSeed, rnd2);
+        return ByteUtils.areEqual(computedPublicKey, pk);
     }
 
     /**
