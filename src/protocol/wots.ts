@@ -216,7 +216,7 @@ export class WOTS {
         const sourcePK = new Uint8Array(2144);
         const components = componentsGenerator(secret);
 
-        WOTS.wots_pkgen(sourcePK, secret, components.public_seed, 0, components.addr_seed);
+        WOTS.wots_pkgen(sourcePK, components.private_seed, components.public_seed, 0, components.addr_seed);
 
         const sourceAddress = new Uint8Array(2208);
         sourceAddress.set(sourcePK, 0);
@@ -230,7 +230,7 @@ export class WOTS {
 
         // Validate address
         for (let i = 0; i < 10; i++) {
-            if (!this.isValid(secret, readyAddress, randomGenerator)) {
+            if (!this.isValid(components.private_seed, readyAddress, randomGenerator)) {
                 throw new Error('Invalid WOTS');
             }
         }

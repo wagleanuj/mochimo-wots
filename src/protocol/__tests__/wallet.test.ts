@@ -42,7 +42,8 @@ describe('WOTSWallet', () => {
 
             expect(wallet.getName()).toBe("Test Wallet");
             expect(wallet.getTag()).toEqual(tag);
-            expect(wallet.getSecret()).toEqual(secret);
+            // TODO: this is kind of a bummer; since this wallet generates a new secret based on this secret by hashing (secret+'seed')
+            expect(wallet.getSecret()).not.toEqual(secret); 
             expect(wallet.getAddress()).toBeDefined();
             expect(wallet.getAddress()?.length).toBe(2208);
         });

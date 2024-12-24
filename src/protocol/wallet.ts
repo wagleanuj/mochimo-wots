@@ -1,7 +1,7 @@
 import { ByteArray } from '@/types/byte-buffer';
 import { ByteUtils } from '@/utils/byte-utils';
 import { WOTS } from './wots';
-import { MochimoHasher } from '@/hasher/mochimo-hasher';    
+import { MochimoHasher } from '@/hasher/mochimo-hasher';
 
 
 interface WOTSWalletParams {
@@ -34,11 +34,11 @@ export class WOTSWallet implements WOTSWalletJSON {
     /**
      * Creates a new WOTS wallet
      */
-    private constructor({ 
-        name = null, 
-        address = null, 
-        tag = null, 
-        secret = null 
+    private constructor({
+        name = null,
+        address = null,
+        tag = null,
+        secret = null
     }: {
         name?: string | null;
         address?: ByteArray | null;
@@ -92,13 +92,13 @@ export class WOTSWallet implements WOTSWalletJSON {
     sign(data: ByteArray): ByteArray {
         const sourceSeed = this.secret;
         const sourceWots = this.address;
-        if(!sourceSeed || !sourceWots) {
+        if (!sourceSeed || !sourceWots) {
             throw new Error('Cannot sign without secret key or address');
         }
-        if(sourceSeed.length !== 32) {
+        if (sourceSeed.length !== 32) {
             throw new Error('Invalid sourceSeed length, expected 32, got ' + sourceSeed.length);
         }
-        if(sourceWots.length !== 2208) {
+        if (sourceWots.length !== 2208) {
             throw new Error('Invalid sourceWots length, expected 2208, got ' + sourceWots.length);
         }
         const pk = sourceWots.subarray(0, WOTS.WOTSSIGBYTES);
@@ -116,7 +116,7 @@ export class WOTSWallet implements WOTSWalletJSON {
      */
 
     verify(message: ByteArray, signature: ByteArray): boolean {
-        if(!this.address) {
+        if (!this.address) {
             throw new Error('Cannot verify without public key (address)');
         }
         const srcAddr = this.address;
@@ -184,8 +184,9 @@ export class WOTSWallet implements WOTSWalletJSON {
         if (tag !== null && tag.length !== 12) {
             throw new Error('Invalid tag');
         }
+        const { private_seed } = this.componentsGenerator(secret);
         const sourcePK = WOTS.generateAddress(tag, secret, this.componentsGenerator);
-        const ww = new WOTSWallet({ name, address: sourcePK, tag, secret });
+        const ww = new WOTSWallet({ name, address: sourcePK, tag, secret: private_seed });
         return ww;
     }
 
