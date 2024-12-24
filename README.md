@@ -17,19 +17,51 @@ npm install mochimo-wots-v2
 - Post-quantum secure signatures
 - Byte buffer utilities for efficient byte operations
 - Comprehensive test coverage
-- Zero external runtime dependencies
+- One external runtime dependency (crypto-js)
 
 ## Usage
 
 ### WOTS Operations
 ```typescript
-import { WOTS } from 'mochimo-wots-v2';
+import { WOTS, ByteUtils } from 'mochimo-wots-v2';
+//Generate a valid wots address
+ const sourcePK = new Uint8Array(2144);
+ const sourcePubSeed = new Uint8Array(32).fill(0x12); //use some deterministic seed in real scenarios
+ const sourceRnd2 = new Uint8Array(32).fill(0x34);
+ WOTS.wots_pkgen(sourcePK, sourceSecret, sourcePubSeed, 0, sourceRnd2);
 
-// Initialize WOTS
-const wots = new WOTS();
+const sourceAddress = new Uint8Array(2208);
+sourceAddress.set(sourcePK, 0);
+sourceAddress.set(sourcePubSeed, 2144);
+sourceAddress.set(sourceRnd2, 2176);
+//Note that this address is valid but is not tagged. To tag the address, use the Tag.tag function
+const tagBytes = new Uint8Array(12).fill(0x12);
+const taggedSourceAddr = Tag.tag(sourceAddress, tagBytes);
 
-// Generate keys and sign messages
-// (Documentation coming soon)
+```
+
+### Advanced WOTS Usage
+```typescript
+// Custom components generator for deterministic addresses
+function myComponentsGenerator(seed: Uint8Array) {
+    // Generate deterministic components from seed
+    return {
+        private_seed: generatePrivateSeed(seed),
+        public_seed: generatePublicSeed(seed),
+        addr_seed: generateAddressSeed(seed)
+    };
+}
+
+const secret = new Uint8Array(32).fill(0x12);
+const tag = new Uint8Array(12).fill(0x34);
+
+// Generate deterministic address
+const address = WOTS.generateAddress(tag, secret, myComponentsGenerator);
+
+// Validate address
+const privateSeed = myComponentsGenerator(secret);
+const isValid = WOTS.isValid(privateSeed, address);
+console.log('Address valid:', isValid);
 ```
 
 ### Byte Buffer Operations
@@ -53,18 +85,14 @@ buffer.rewind().get(data);
 ```typescript
 import { WOTSWallet } from 'mochimo-wots-v2';
 
-// Create a random secret (32 bytes)
-const secret = new Uint8Array(32);
-crypto.getRandomValues(secret);
+// Create a secret (32 bytes)
+const secret = new Uint8Array(32).fill(0x56); //simple example secret
+const tag = new Uint8Array(12).fill(0x34); //simple example tag
+//create the wallet
+const wallet = WOTSWallet.create("Test Wallet", secret, tag);
 
-// Create a tag (12 bytes)
-const tag = new Uint8Array(12);
-crypto.getRandomValues(tag);
 
-// Create the wallet
-const wallet = WOTSWallet.create("My Wallet", secret, tag);
-
-// Get the public address (2208 bytes)
+// Get the public key (2208 bytes)
 const address = wallet.getAddress();
 console.log('Address:', wallet.getAddressHex());
 
