@@ -1,5 +1,5 @@
 import { ByteArray } from '@/types/byte-buffer';
-import { Utils } from '@/utils';
+import { ByteUtils } from '@/utils/byte-utils';
 import { WOTS } from './wots';
 import { MochimoHasher } from '@/hasher/mochimo-hasher';    
 
@@ -40,8 +40,8 @@ export class WOTSWallet implements WOTSWalletJSON {
         this.secret = params.secret ? new Uint8Array(params.secret) : null;
 
         // Initialize hex strings
-        this.addressHex = this.address ? Utils.bytesToHex(this.address) : null;
-        this.tagHex = this.tag ? Utils.bytesToHex(this.tag) : null;
+        this.addressHex = this.address ? ByteUtils.bytesToHex(this.address) : null;
+        this.tagHex = this.tag ? ByteUtils.bytesToHex(this.tag) : null;
     }
     getName() {
         return this.name;
@@ -78,7 +78,7 @@ export class WOTSWallet implements WOTSWalletJSON {
      */
     sign(data: ByteArray): ByteArray {
         if (!this.secret) throw new Error("Secret is not set");
-        return WOTS.wotsSign(Utils.bytesToHex(this.secret), data);
+        return WOTS.wotsSign(ByteUtils.bytesToHex(this.secret), data);
     }
 
     /**
@@ -102,9 +102,9 @@ export class WOTSWallet implements WOTSWalletJSON {
     clear(): void {
         // Clear copies
 
-        if (this.secret) Utils.clear(this.secret);
-        if (this.address) Utils.clear(this.address);
-        if (this.tag) Utils.clear(this.tag);
+        if (this.secret) ByteUtils.clear(this.secret);
+        if (this.address) ByteUtils.clear(this.address);
+        if (this.tag) ByteUtils.clear(this.tag);
         if (this.tagHex) this.tagHex = null;
         if (this.addressHex) this.addressHex = null;
     }

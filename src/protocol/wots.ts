@@ -1,5 +1,5 @@
 import { ByteArray, ByteBuffer, ByteOrder } from '@/types/byte-buffer';
-import { Utils } from '@/utils';
+import { ByteUtils } from '@/utils/byte-utils';
 import { WOTSHash } from './hash';
 import { Tag } from './tag';
 
@@ -47,7 +47,7 @@ export class WOTS {
      */
     private static expand_seed(outseeds: ByteArray, inseed: ByteArray): void {
         for (let i = 0; i < WOTS.WOTSLEN; i++) {
-            const ctr = Utils.toBytes(i, 32);
+            const ctr = ByteUtils.toBytes(i, 32);
             WOTSHash.prf(outseeds, i * 32, ctr, inseed);
         }
     }
@@ -172,7 +172,7 @@ export class WOTS {
      * Signs a message using WOTS
      */
     static wotsSign(sourceSeed: string, msg: ByteArray) {
-        const seed = Utils.hexToBytes(sourceSeed);
+        const seed = ByteUtils.hexToBytes(sourceSeed);
         const pk = seed.subarray(0, WOTS.WOTSSIGBYTES);
         const pubSeed = seed.subarray(WOTS.WOTSSIGBYTES, WOTS.WOTSSIGBYTES + 32);
         const rnd2 = seed.subarray(WOTS.WOTSSIGBYTES + 32, WOTS.WOTSSIGBYTES + 64);
@@ -283,7 +283,7 @@ export class WOTS {
         // Verify signature
         const computedPk = this.wots_pk_from_sig(sig, msg, pubSeed, rnd2);
         // Compare public keys
-        return Utils.compareBytes(computedPk, pk);
+        return ByteUtils.compareBytes(computedPk, pk);
     }
 
     /**
