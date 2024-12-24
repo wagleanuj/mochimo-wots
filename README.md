@@ -49,6 +49,53 @@ const data = new Uint8Array(4);
 buffer.rewind().get(data);
 ```
 
+### Creating a WOTS Wallet
+```typescript
+import { WOTSWallet } from 'mochimo-wots-v2';
+
+// Create a random secret (32 bytes)
+const secret = new Uint8Array(32);
+crypto.getRandomValues(secret);
+
+// Create a tag (12 bytes)
+const tag = new Uint8Array(12);
+crypto.getRandomValues(tag);
+
+// Create the wallet
+const wallet = WOTSWallet.create("My Wallet", secret, tag);
+
+// Get the public address (2208 bytes)
+const address = wallet.getAddress();
+console.log('Address:', wallet.getAddressHex());
+
+// Get the tag
+console.log('Tag:', wallet.getTagHex());
+```
+
+### Signing and Verifying Messages
+```typescript
+// Message to sign
+const message = new TextEncoder().encode("Hello, Mochimo!");
+
+// Sign the message
+const signature = wallet.sign(message);
+
+// Verify the signature
+const isValid = wallet.verify(message, signature);
+console.log('Signature valid:', isValid);
+
+// Verify with modified message (should fail)
+const modifiedMessage = new TextEncoder().encode("Hello, Modified!");
+const isValidModified = wallet.verify(modifiedMessage, signature);
+console.log('Modified message valid:', isValidModified); // false
+```
+
+### Important Notes
+1. WOTS is a one-time signature scheme - each private key should only be used to sign once
+2. The secret is used to deterministically generate the actual signing key
+3. The address contains the public key and verification components
+4. Tags are optional and can be used to categorize addresses
+
 ## Development
 
 ### Setup
