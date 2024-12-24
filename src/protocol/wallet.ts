@@ -39,12 +39,7 @@ export class WOTSWallet implements WOTSWalletJSON {
         address = null,
         tag = null,
         secret = null
-    }: {
-        name?: string | null;
-        address?: ByteArray | null;
-        tag?: ByteArray | null;
-        secret?: ByteArray | null;
-    }) {
+    }: WOTSWalletParams) {
         this.name = name;
         this.address = address;
         this.tag = tag;
