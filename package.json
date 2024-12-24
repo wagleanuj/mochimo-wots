@@ -4,22 +4,37 @@
   "description": "TypeScript implementation of Mochimo WOTS v2",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mochimodev/mochimo-wots-v2.git"
   },
   "keywords": [
     "cryptocurrency",
     "cryptography",
     "wots",
     "one-time-signature",
-    "typescript"
+    "typescript",
+    "mochimo"
   ],
-  "author": "Your Name",
+  "author": "Mochimo Developers",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mochimodev/mochimo-wots-v2/issues"
+  },
+  "homepage": "https://github.com/mochimodev/mochimo-wots-v2#readme",
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
     "@types/jest": "^29.5.14",
