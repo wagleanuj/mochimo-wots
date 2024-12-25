@@ -226,7 +226,6 @@ export class WOTS {
 
         // Apply tag if provided using Tag.tag
         const readyAddress = tag ? Tag.tag(sourceAddress, tag) : sourceAddress;
-        console.log("SOURCEPK GENADDRESS:: ", tag, sourcePK.length, secret.length, readyAddress.length);
 
         // Validate address
         for (let i = 0; i < 10; i++) {
