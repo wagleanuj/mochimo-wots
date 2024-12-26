@@ -9,3 +9,5 @@ export type { ByteArray, HexString } from './types/byte-buffer';
 
 // Hasher
 export { MochimoHasher } from './hasher/mochimo-hasher';
+export { Transaction } from './protocol/transaction';
+export { Datagram } from './protocol/datagram';
