@@ -84,58 +84,59 @@ export class WotsAddress {
         view.setBigUint64(0, this.amount, true);
         return new Uint8Array(buffer);
     }
-}
 
-export function wotsAddressFromBytes(bytes: Uint8Array): WotsAddress {
-    const wots = new WotsAddress();
 
-    if (bytes.length === WOTS_PK_LEN) {
-        const addr = addrFromWots(bytes);
-        if (addr) {
+    static wotsAddressFromBytes(bytes: Uint8Array): WotsAddress {
+        const wots = new WotsAddress();
+
+        if (bytes.length === WOTS_PK_LEN) {
+            const addr = this.addrFromWots(bytes);
+            if (addr) {
+                // Set the full address
+                wots.setTag(addr.slice(0, ADDR_TAG_LEN));
+                wots.setAddress(addr.slice(ADDR_TAG_LEN));
+            }
+        } else if (bytes.length === TXADDRLEN) {
             // Set the full address
-            wots.setTag(addr.slice(0, ADDR_TAG_LEN));
-            wots.setAddress(addr.slice(ADDR_TAG_LEN));
+            wots.setTag(bytes.slice(0, ADDR_TAG_LEN));
+            wots.setAddress(bytes.slice(ADDR_TAG_LEN));
+        } else if (bytes.length === TXADDRLEN + TXAMOUNT) {
+            // Set address and amount separately
+            wots.setTag(bytes.slice(0, ADDR_TAG_LEN));
+            wots.setAddress(bytes.slice(ADDR_TAG_LEN, TXADDRLEN));
+            wots.setAmountBytes(bytes.slice(TXADDRLEN));
         }
-    } else if (bytes.length === TXADDRLEN) {
-        // Set the full address
-        wots.setTag(bytes.slice(0, ADDR_TAG_LEN));
-        wots.setAddress(bytes.slice(ADDR_TAG_LEN));
-    } else if (bytes.length === TXADDRLEN + TXAMOUNT) {
-        // Set address and amount separately
-        wots.setTag(bytes.slice(0, ADDR_TAG_LEN));
-        wots.setAddress(bytes.slice(ADDR_TAG_LEN, TXADDRLEN));
-        wots.setAmountBytes(bytes.slice(TXADDRLEN));
+
+        return wots;
     }
 
-    return wots;
-}
-
-export function wotsAddressFromHex(wotsHex: string): WotsAddress {
-    const bytes = Buffer.from(wotsHex, 'hex');
-    if (bytes.length !== TXADDRLEN) {
-        return new WotsAddress();
+    static wotsAddressFromHex(wotsHex: string): WotsAddress {
+        const bytes = Buffer.from(wotsHex, 'hex');
+        if (bytes.length !== TXADDRLEN) {
+            return new WotsAddress();
+        }
+        return this.wotsAddressFromBytes(bytes);
     }
-    return wotsAddressFromBytes(bytes);
-}
 
-export function addrFromImplicit(tag: Uint8Array): Uint8Array {
-    const addr = new Uint8Array(TXADDRLEN);
-    addr.set(tag.slice(0, ADDR_TAG_LEN), 0);
-    addr.set(tag.slice(0, TXADDRLEN - ADDR_TAG_LEN), ADDR_TAG_LEN);
-    return addr;
-}
-
-export function addrHashGenerate(input: Uint8Array): Uint8Array {
-    const inputWordArray = uint8ArrayToWordArray(input);
-    const sha3Hash = SHA3(inputWordArray, { outputLength: 512 });
-    const ripemdHash = RIPEMD160(sha3Hash);
-    return wordArrayToUint8Array(ripemdHash);
-}
-
-export function addrFromWots(wots: Uint8Array): Uint8Array | null {
-    if (wots.length !== WOTS_PK_LEN) {
-        return null;
+    static addrFromImplicit(tag: Uint8Array): Uint8Array {
+        const addr = new Uint8Array(TXADDRLEN);
+        addr.set(tag.slice(0, ADDR_TAG_LEN), 0);
+        addr.set(tag.slice(0, TXADDRLEN - ADDR_TAG_LEN), ADDR_TAG_LEN);
+        return addr;
     }
-    const hash = addrHashGenerate(wots.slice(0, WOTS_PK_LEN));
-    return addrFromImplicit(hash);
-} 
+
+    static addrHashGenerate(input: Uint8Array): Uint8Array {
+        const inputWordArray = uint8ArrayToWordArray(input);
+        const sha3Hash = SHA3(inputWordArray, { outputLength: 512 });
+        const ripemdHash = RIPEMD160(sha3Hash);
+        return wordArrayToUint8Array(ripemdHash);
+    }
+
+    static addrFromWots(wots: Uint8Array): Uint8Array | null {
+        if (wots.length !== WOTS_PK_LEN) {
+            return null;
+        }
+        const hash = this.addrHashGenerate(wots.slice(0, WOTS_PK_LEN));
+        return this.addrFromImplicit(hash);
+    }
+}
