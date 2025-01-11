@@ -1,3 +1,4 @@
+//obsolete
 import { ByteArray } from '@/types/byte-buffer';
 import { ByteBuffer, ByteOrder } from '@/types/byte-buffer';
 import { Datagram } from '@/protocol/datagram';
@@ -14,6 +15,8 @@ export const TX_CONSTANTS = {
 } as const;
 
 /**
+ * @deprecated
+ * This is no longer valid for Mochimo v3. Please use Mesh Api for creating transactions.
  * Transaction implementation
  */
 export class Transaction {
