@@ -11,3 +11,4 @@ export type { ByteArray, HexString } from './types/byte-buffer';
 export { MochimoHasher } from './hasher/mochimo-hasher';
 export { Transaction } from './protocol/transaction';
 export { Datagram } from './protocol/datagram';
+export { WotsAddress } from './protocol/wots-addr';
