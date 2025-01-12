@@ -64,9 +64,9 @@ export class MochimoHasher {
         const hasher = new MochimoHasher();
 
         if (offset !== undefined && length !== undefined) {
-            hasher.update(data.subarray(offset, offset + length));
+            hasher.update(new Uint8Array(data.subarray(offset, offset + length)));
         } else {
-            hasher.update(data);
+            hasher.update(new Uint8Array(data));
         }
 
         return hasher.digest();
