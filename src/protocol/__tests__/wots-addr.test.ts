@@ -171,6 +171,7 @@ describe('WotsAddress', () => {
             const finalAddr = Buffer.from(addr1).toString('hex');   
             console.log('Final addr1:', finalAddr);
             expect(finalAddr).toEqual("7fe0655e22061d36f253085bfe4e3ffe8079176d7fe0655e22061d36f253085bfe4e3ffe8079176d");
+
         });
     });
 }); 

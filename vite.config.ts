@@ -10,14 +10,7 @@ export default defineConfig({
       fileName: (format) => `index.${format}.js`,
       formats: ['es', 'umd']
     },
-    rollupOptions: {
-      external: ['crypto-js'],
-      output: {
-        globals: {
-          'crypto-js': 'CryptoJS'
-        }
-      }
-    }
+
   },
   plugins: [dts()],
   resolve: {

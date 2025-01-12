@@ -1,23 +1,33 @@
-import crypto from 'crypto';
+import { sha256 } from '@noble/hashes/sha256';
+import { sha3_512 } from '@noble/hashes/sha3';
+import { ripemd160 } from '@noble/hashes/ripemd160';
+import { Hash } from '@noble/hashes/utils';
 import { ByteArray } from '@/types/byte-buffer';
-
-interface Hasher {
-    update(data: Buffer): void;
-    digest(): Buffer;
-    copy(): Hasher;
-}
 
 /**
  * TypeScript implementation of MochimoHasher
- * Uses node's crypto module for SHA-256/SHA-512/RIPEMD160 implementation
+ * Uses @noble/hashes for cross-platform hash implementations
  */
 export class MochimoHasher {
-    private hasher: Hasher;
+    private hasher: Hash<Hash<any>>;
     private algorithm: string;
 
     constructor(algorithm: string = 'sha256') {
-        this.hasher = crypto.createHash(algorithm);
         this.algorithm = algorithm;
+        this.hasher = this.createHasher(algorithm);
+    }
+
+    private createHasher(algorithm: string): Hash<Hash<any>> {
+        switch (algorithm.toLowerCase()) {
+            case 'sha256':
+                return sha256.create();
+            case 'sha3-512':
+                return sha3_512.create();
+            case 'ripemd160':
+                return ripemd160.create();
+            default:
+                throw new Error(`Unsupported hash algorithm: ${algorithm}`);
+        }
     }
 
     /**
@@ -32,30 +42,21 @@ export class MochimoHasher {
         }
 
         const data = buffer.subarray(offset, offset + length);
-        this.hasher.update(Buffer.from(data));
+        this.hasher.update(data);
     }
 
     /**
      * Returns the final hash value
      */
     digest(): ByteArray {
-        const hash = this.hasher.digest();
+        const result = this.hasher.digest();
         // Create new hasher for next use
-        this.hasher = crypto.createHash(this.algorithm);
-        return new Uint8Array(hash);
+        this.hasher = this.createHasher(this.algorithm);
+        return result;
     }
 
     /**
-     * Creates a copy of the current hasher state
-     */
-    copy(): MochimoHasher {
-        const newHasher = new MochimoHasher();
-        newHasher.hasher = (this.hasher as any).copy();
-        return newHasher;
-    }
-
-    /**
-     * Performs Mochimo's hash
+     * Performs hash operation
      */
     static hash(data: ByteArray): ByteArray;
     static hash(data: ByteArray, offset: number, length: number): ByteArray;
@@ -77,3 +78,5 @@ export class MochimoHasher {
         return hasher.digest();
     }
 }
+
+

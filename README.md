@@ -17,7 +17,7 @@ npm install mochimo-wots-v2
 - Post-quantum secure signatures
 - Byte buffer utilities for efficient byte operations
 - Comprehensive test coverage
-- One external runtime dependency (crypto-js)
+- One external runtime dependency (@noble/hashes)
 
 ## Usage
 

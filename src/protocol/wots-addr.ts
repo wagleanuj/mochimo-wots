@@ -1,10 +1,15 @@
-import crypto from 'crypto';
+import crypto from 'crypto'
+import { MochimoHasher } from '@/hasher';
 
 // Constants
 const TXADDRLEN = 40;      // Total address length
-const ADDR_TAG_LEN = 20;    // Tag length
-const WOTS_PK_LEN = 2144;  
-const TXAMOUNT = 8;        
+const ADDR_TAG_LEN = 20;    // Tag length should be 12 bytes, not 20
+const WOTS_PK_LEN = 2144;
+const TXAMOUNT = 8;
+const SHA3LEN512 = 64;
+
+// Helper function to convert CryptoJS WordArray to Uint8Array
+
 
 export class WotsAddress {
     private address: Uint8Array;
@@ -31,7 +36,7 @@ export class WotsAddress {
     }
 
     public getAddress(): Uint8Array {
-        return this.address.slice(ADDR_TAG_LEN, TXADDRLEN);
+        return this.address.slice(ADDR_TAG_LEN);
     }
 
     public setAddress(address: Uint8Array): void {
@@ -96,14 +101,14 @@ export class WotsAddress {
     }
 
     static addrHashGenerate(input: Uint8Array): Uint8Array {
-        const hash = crypto.createHash('sha3-512');
-        hash.update(input);
-        const sha3Hash = hash.digest();
+        // First pass: SHA3-512
+        const sha3Hash = MochimoHasher.hashWith('sha3-512', input);
         
-        const ripemdHash = crypto.createHash('ripemd160');
-        ripemdHash.update(sha3Hash);
-        return ripemdHash.digest();
+        // Second pass: RIPEMD160
+        return MochimoHasher.hashWith('ripemd160', sha3Hash);
     }
+
+
 
     static addrFromWots(wots: Uint8Array): Uint8Array | null {
         if (wots.length !== WOTS_PK_LEN) {
