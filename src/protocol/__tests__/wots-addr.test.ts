@@ -64,7 +64,7 @@ describe('WotsAddress', () => {
 
     describe('wotsAddressFromBytes', () => {
         it('should create from WOTS public key', () => {
-            const wotsPK = new Uint8Array(2048).fill(0x56);
+            const wotsPK = new Uint8Array(2144).fill(0x56);
             const result = WotsAddress.wotsAddressFromBytes(wotsPK);
             expect(result).toBeInstanceOf(WotsAddress);
             expect(result.bytes().length).toBe(28);
@@ -134,7 +134,7 @@ describe('WotsAddress', () => {
         });
 
         it('should handle WOTS address conversion', () => {
-            const wotsPK = new Uint8Array(2048).fill(0x56);
+            const wotsPK = new Uint8Array(2144).fill(0x56);
             const addr = WotsAddress.addrFromWots(wotsPK);
 
             expect(addr).not.toBeNull();

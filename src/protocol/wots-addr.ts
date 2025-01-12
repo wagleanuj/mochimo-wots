@@ -5,7 +5,7 @@ import { enc, lib } from 'crypto-js';
 // Constants
 const TXADDRLEN = 20;      // Total address length
 const ADDR_TAG_LEN = 20;    // Tag length should be 12 bytes, not 20
-const WOTS_PK_LEN = 2048;
+const WOTS_PK_LEN = 2144;
 const TXAMOUNT = 8;
 const SHA3LEN512 = 64;
 
