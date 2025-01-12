@@ -1,22 +1,23 @@
-import { lib, algo } from 'crypto-js';
+import crypto from 'crypto';
 import { ByteArray } from '@/types/byte-buffer';
 
 interface Hasher {
-    blockSize: number;
-    reset(): void;
-    update(messageUpdate: lib.WordArray | string): this;
-    finalize(messageUpdate?: lib.WordArray | string): lib.WordArray;
+    update(data: Buffer): void;
+    digest(): Buffer;
+    copy(): Hasher;
 }
 
 /**
  * TypeScript implementation of MochimoHasher
- * Uses crypto-js for cross-platform SHA-256 implementation
+ * Uses node's crypto module for SHA-256/SHA-512/RIPEMD160 implementation
  */
 export class MochimoHasher {
     private hasher: Hasher;
+    private algorithm: string;
 
-    constructor() {
-        this.hasher = algo.SHA256.create();
+    constructor(algorithm: string = 'sha256') {
+        this.hasher = crypto.createHash(algorithm);
+        this.algorithm = algorithm;
     }
 
     /**
@@ -31,44 +32,30 @@ export class MochimoHasher {
         }
 
         const data = buffer.subarray(offset, offset + length);
-        // Create a WordArray directly from bytes
-        const words: number[] = new Array(Math.ceil(data.length / 4));
-        for (let i = 0; i < data.length; i += 4) {
-            words[i >> 2] = ((data[i] || 0) << 24) |
-                ((data[i + 1] || 0) << 16) |
-                ((data[i + 2] || 0) << 8) |
-                (data[i + 3] || 0);
-        }
-
-        this.hasher.update(lib.WordArray.create(words, data.length));
+        this.hasher.update(Buffer.from(data));
     }
 
     /**
      * Returns the final hash value
      */
     digest(): ByteArray {
-        const hash = this.hasher.finalize();
-        const result = new Uint8Array(32);
-
-        // Convert WordArray to bytes in big-endian order
-        const words = hash.words;
-        for (let i = 0; i < 8; i++) {
-            const word = words[i];
-            const j = i * 4;
-            result[j] = word >>> 24;
-            result[j + 1] = (word >>> 16) & 0xff;
-            result[j + 2] = (word >>> 8) & 0xff;
-            result[j + 3] = word & 0xff;
-        }
-
-        // Reset for next use
-        this.hasher = algo.SHA256.create();
-
-        return result;
+        const hash = this.hasher.digest();
+        // Create new hasher for next use
+        this.hasher = crypto.createHash(this.algorithm);
+        return new Uint8Array(hash);
     }
 
     /**
-     * Performs Mochimo's SHA-256 hash
+     * Creates a copy of the current hasher state
+     */
+    copy(): MochimoHasher {
+        const newHasher = new MochimoHasher();
+        newHasher.hasher = (this.hasher as any).copy();
+        return newHasher;
+    }
+
+    /**
+     * Performs Mochimo's hash
      */
     static hash(data: ByteArray): ByteArray;
     static hash(data: ByteArray, offset: number, length: number): ByteArray;
@@ -81,6 +68,12 @@ export class MochimoHasher {
             hasher.update(data);
         }
 
+        return hasher.digest();
+    }
+
+    static hashWith(algorithm: string, data: ByteArray): ByteArray {
+        const hasher = new MochimoHasher(algorithm);
+        hasher.update(data);
         return hasher.digest();
     }
 }

@@ -13,7 +13,7 @@ describe('WotsAddress', () => {
 
         it('should initialize with zero amount', () => {
             expect(wotsAddr.getAmount()).toBe(BigInt(0));
-            expect(wotsAddr.bytes().length).toBe(28); // TXADDRLEN + TXAMOUNT
+            expect(wotsAddr.bytes().length).toBe(48); // TXADDRLEN + TXAMOUNT
         });
 
         it('should handle tag operations correctly', () => {
@@ -31,7 +31,7 @@ describe('WotsAddress', () => {
 
             const retrievedAddr = wotsAddr.getAddress();
             // Should only get the non-tag portion
-            expect(retrievedAddr.length).toBe(0); // TXADDRLEN - ADDR_TAG_LEN = 0
+            expect(retrievedAddr.length).toBe(20); // TXADDRLEN - ADDR_TAG_LEN = 20
         });
 
         it('should handle amount operations correctly', () => {
@@ -56,9 +56,9 @@ describe('WotsAddress', () => {
             wotsAddr.setAmountBytes(amountBytes);
 
             const bytes = wotsAddr.bytes();
-            expect(bytes.length).toBe(28); // TXADDRLEN + TXAMOUNT
+            expect(bytes.length).toBe(48); // TXADDRLEN + TXAMOUNT
             expect(ByteUtils.areEqual(bytes.slice(0, 20), tag)).toBe(true);
-            expect(ByteUtils.areEqual(bytes.slice(20), amountBytes)).toBe(true);
+            expect(ByteUtils.areEqual(bytes.slice(40, 48), amountBytes)).toBe(true);
         });
     });
 
@@ -67,14 +67,14 @@ describe('WotsAddress', () => {
             const wotsPK = new Uint8Array(2144).fill(0x56);
             const result = WotsAddress.wotsAddressFromBytes(wotsPK);
             expect(result).toBeInstanceOf(WotsAddress);
-            expect(result.bytes().length).toBe(28);
+            expect(result.bytes().length).toBe(48);
         });
 
         it('should create from address bytes', () => {
             const addrBytes = new Uint8Array(20).fill(0x78);
             const result = WotsAddress.wotsAddressFromBytes(addrBytes);
             expect(result).toBeInstanceOf(WotsAddress);
-            expect(result.bytes().length).toBe(28);
+            expect(result.bytes().length).toBe(48);
         });
 
         it('should create from address with amount', () => {
@@ -83,9 +83,9 @@ describe('WotsAddress', () => {
             const amountBytes = new Uint8Array(8);
             new DataView(amountBytes.buffer).setBigUint64(0, amount, true);
 
-            const fullBytes = new Uint8Array(28);
+            const fullBytes = new Uint8Array(48);
             fullBytes.set(addr, 0);
-            fullBytes.set(amountBytes, 20);
+            fullBytes.set(amountBytes, 40);
 
             const result = WotsAddress.wotsAddressFromBytes(fullBytes);
 
@@ -118,7 +118,7 @@ describe('WotsAddress', () => {
             const tag = new Uint8Array(20).fill(0x12);
             const addr = WotsAddress.addrFromImplicit(tag);
 
-            expect(addr.length).toBe(20);
+            expect(addr.length).toBe(40);
             expect(ByteUtils.areEqual(addr.slice(0, 20), tag)).toBe(true);
         });
 
@@ -138,7 +138,7 @@ describe('WotsAddress', () => {
             const addr = WotsAddress.addrFromWots(wotsPK);
 
             expect(addr).not.toBeNull();
-            expect(addr!.length).toBe(20);
+            expect(addr!.length).toBe(40);
 
             // Test invalid input
             const invalidWots = new Uint8Array(100);
@@ -151,7 +151,7 @@ describe('WotsAddress', () => {
             const validHex = '1234567890'.repeat(4); // 20 bytes
             const result = WotsAddress.wotsAddressFromHex(validHex);
             expect(result).toBeInstanceOf(WotsAddress);
-            expect(result.bytes().length).toBe(28);
+            expect(result.bytes().length).toBe(48);
         });
 
         it('should handle invalid hex string', () => {
@@ -159,6 +159,18 @@ describe('WotsAddress', () => {
             const result = WotsAddress.wotsAddressFromHex(invalidHex);
             expect(result).toBeInstanceOf(WotsAddress);
             expect(result.getAmount()).toBe(BigInt(0));
+        });
+    });
+
+
+    describe('addrFromWots', () => {
+        it('should generate address correctly', () => {
+            const wotsPK = new Uint8Array(2144).fill(0x42);
+            // Compare final addresses
+            const addr1 = WotsAddress.addrFromWots(wotsPK)!;
+            const finalAddr = Buffer.from(addr1).toString('hex');   
+            console.log('Final addr1:', finalAddr);
+            expect(finalAddr).toEqual("7fe0655e22061d36f253085bfe4e3ffe8079176d7fe0655e22061d36f253085bfe4e3ffe8079176d");
         });
     });
 }); 

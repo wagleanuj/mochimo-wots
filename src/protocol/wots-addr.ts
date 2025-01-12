@@ -1,40 +1,10 @@
-import SHA3 from 'crypto-js/sha3';
-import RIPEMD160 from 'crypto-js/ripemd160';
-import { enc, lib } from 'crypto-js';
+import crypto from 'crypto';
 
 // Constants
-const TXADDRLEN = 20;      // Total address length
-const ADDR_TAG_LEN = 20;    // Tag length should be 12 bytes, not 20
-const WOTS_PK_LEN = 2144;
-const TXAMOUNT = 8;
-const SHA3LEN512 = 64;
-
-// Helper function to convert CryptoJS WordArray to Uint8Array
-function wordArrayToUint8Array(wordArray: lib.WordArray): Uint8Array {
-    const words = wordArray.words;
-    const sigBytes = wordArray.sigBytes;
-    const u8 = new Uint8Array(sigBytes);
-    for (let i = 0; i < sigBytes; i++) {
-        const byte = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
-        u8[i] = byte;
-    }
-    return u8;
-}
-
-// Helper function to convert Uint8Array to CryptoJS WordArray
-function uint8ArrayToWordArray(u8arr: Uint8Array): lib.WordArray {
-    const len = u8arr.length;
-    const words: number[] = [];
-    for (let i = 0; i < len; i += 4) {
-        words.push(
-            (u8arr[i] << 24) |
-            (u8arr[i + 1] << 16) |
-            (u8arr[i + 2] << 8) |
-            (u8arr[i + 3])
-        );
-    }
-    return lib.WordArray.create(words, len);
-}
+const TXADDRLEN = 40;      // Total address length
+const ADDR_TAG_LEN = 20;    // Tag length
+const WOTS_PK_LEN = 2144;  
+const TXAMOUNT = 8;        
 
 export class WotsAddress {
     private address: Uint8Array;
@@ -61,7 +31,7 @@ export class WotsAddress {
     }
 
     public getAddress(): Uint8Array {
-        return this.address.slice(ADDR_TAG_LEN);
+        return this.address.slice(ADDR_TAG_LEN, TXADDRLEN);
     }
 
     public setAddress(address: Uint8Array): void {
@@ -126,10 +96,13 @@ export class WotsAddress {
     }
 
     static addrHashGenerate(input: Uint8Array): Uint8Array {
-        const inputWordArray = uint8ArrayToWordArray(input);
-        const sha3Hash = SHA3(inputWordArray, { outputLength: 512 });
-        const ripemdHash = RIPEMD160(sha3Hash);
-        return wordArrayToUint8Array(ripemdHash);
+        const hash = crypto.createHash('sha3-512');
+        hash.update(input);
+        const sha3Hash = hash.digest();
+        
+        const ripemdHash = crypto.createHash('ripemd160');
+        ripemdHash.update(sha3Hash);
+        return ripemdHash.digest();
     }
 
     static addrFromWots(wots: Uint8Array): Uint8Array | null {
