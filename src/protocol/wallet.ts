@@ -58,7 +58,7 @@ export class WOTSWallet implements WOTSWalletJSON {
         this.wotsAddrHex = this.wots ? ByteUtils.bytesToHex(this.wots) : null;
         this.addrTagHex = this.addrTag ? ByteUtils.bytesToHex(this.addrTag) : null;
         // Mochimo address
-        this.mochimoAddr = this.wots ? WotsAddress.wotsAddressFromBytes(this.wots) : null;
+        this.mochimoAddr = this.wots ? WotsAddress.wotsAddressFromBytes(this.wots.slice(0, 2144)) : null;
         this.mochimoAddr?.setTag(this.addrTag!);
     }
 
@@ -241,14 +241,18 @@ export class WOTSWallet implements WOTSWalletJSON {
             ({ private_seed } = this.componentsGenerator(secret));
             sourcePK = WOTS.generateAddress(defaultTag, secret, this.componentsGenerator);
         }
-        if (!v3tag) {
-            //generate a v3 tag for this address
-            v3tag = WotsAddress.wotsAddressFromBytes(sourcePK).getTag();
+        if(sourcePK.length !== 2208) {
+            throw new Error('Invalid sourcePK length');
         }
-        if (v3tag.length !== 20) {
+        let addrTag = v3tag;
+        if (!addrTag) {
+            //generate a v3 tag for this address
+            addrTag = WotsAddress.wotsAddressFromBytes(sourcePK.slice(0, 2144)).getTag(); 
+        }
+        if (addrTag.length !== 20) {
             throw new Error('Invalid tag');
         }
-        const ww = new WOTSWallet({ name, wots: sourcePK, addrTag: v3tag, secret: private_seed });
+        const ww = new WOTSWallet({ name, wots: sourcePK, addrTag: addrTag, secret: private_seed });
         return ww;
     }
 
