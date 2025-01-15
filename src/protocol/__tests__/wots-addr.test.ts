@@ -27,9 +27,9 @@ describe('WotsAddress', () => {
 
         it('should handle address operations correctly', () => {
             const address = new Uint8Array(20).fill(0x34);
-            wotsAddr.setAddress(address);
+            wotsAddr.setAddrHash(address);
 
-            const retrievedAddr = wotsAddr.getAddress();
+            const retrievedAddr = wotsAddr.getAddrHash();
             // Should only get the non-tag portion
             expect(retrievedAddr.length).toBe(20); // TXADDRLEN - ADDR_TAG_LEN = 20
         });

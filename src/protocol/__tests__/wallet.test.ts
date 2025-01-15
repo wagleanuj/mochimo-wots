@@ -57,7 +57,7 @@ describe('WOTSWallet', () => {
         it('should have valid address', () => {
             const addr = wallet.getAddress();
             expect(addr).toBeDefined();
-            expect(addr?.length).toBe(20);
+            expect(addr?.length).toBe(40);
         });
 
         it('should have valid address tag', () => {
@@ -188,7 +188,7 @@ describe('WOTSWallet', () => {
             expect(wallet.getWotsPubSeed()?.length).toBe(32);
             expect(wallet.getWotsAdrs()?.length).toBe(32);
             expect(wallet.getWotsTag()?.length).toBe(12);
-            expect(wallet.getAddress()?.length).toBe(20);
+            expect(wallet.getAddress()?.length).toBe(40);
             expect(wallet.getAddrHash()?.length).toBe(20);
         });
 

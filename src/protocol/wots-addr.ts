@@ -35,12 +35,15 @@ export class WotsAddress {
         this.address.set(tag.slice(0, ADDR_TAG_LEN), 0);
     }
 
+    public getAddrHash(): Uint8Array {
+        return this.address.slice(ADDR_TAG_LEN, TXADDRLEN);
+    }
     public getAddress(): Uint8Array {
-        return this.address.slice(ADDR_TAG_LEN);
+        return this.address.slice(0, TXADDRLEN);
     }
 
-    public setAddress(address: Uint8Array): void {
-        this.address.set(address.slice(0, TXADDRLEN - ADDR_TAG_LEN), ADDR_TAG_LEN);
+    public setAddrHash(addrHash: Uint8Array): void {
+        this.address.set(addrHash.slice(0, ADDR_TAG_LEN), ADDR_TAG_LEN);
     }
 
     public setAmountBytes(amount: Uint8Array): void {
@@ -69,16 +72,16 @@ export class WotsAddress {
             if (addr) {
                 // Set the full address
                 wots.setTag(addr.slice(0, ADDR_TAG_LEN));
-                wots.setAddress(addr.slice(ADDR_TAG_LEN));
+                wots.setAddrHash(addr.slice(ADDR_TAG_LEN, TXADDRLEN));
             }
         } else if (bytes.length === TXADDRLEN) {
             // Set the full address
             wots.setTag(bytes.slice(0, ADDR_TAG_LEN));
-            wots.setAddress(bytes.slice(ADDR_TAG_LEN));
+            wots.setAddrHash(bytes.slice(ADDR_TAG_LEN, TXADDRLEN));
         } else if (bytes.length === TXADDRLEN + TXAMOUNT) {
             // Set address and amount separately
             wots.setTag(bytes.slice(0, ADDR_TAG_LEN));
-            wots.setAddress(bytes.slice(ADDR_TAG_LEN, TXADDRLEN));
+            wots.setAddrHash(bytes.slice(ADDR_TAG_LEN, TXADDRLEN));
             wots.setAmountBytes(bytes.slice(TXADDRLEN));
         }
 

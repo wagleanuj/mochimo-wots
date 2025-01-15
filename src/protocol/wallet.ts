@@ -111,10 +111,10 @@ export class WOTSWallet implements WOTSWalletJSON {
     }
 
     /**
-     * Get the 20 byte mochimo address 
+     * Get the 40 byte mochimo address [20 bytes tag + 20 bytes address]
      */
     getAddress(): ByteArray | null {
-        return this.mochimoAddr ? this.mochimoAddr.getAddress() : null;
+        return this.mochimoAddr ? this.mochimoAddr.bytes().slice(0, 40) : null;
     }
 
     /**
@@ -129,10 +129,10 @@ export class WOTSWallet implements WOTSWalletJSON {
     }
 
     /**
-     * Get the address hash of mochimo address (40 bytes), [20 bytes tag + 20 bytes address]
+     * Get the address hash of mochimo address (20 bytes)
      */
     getAddrHash(): ByteArray | null {
-        return this.mochimoAddr ? this.mochimoAddr.getAddress() : null;
+        return this.mochimoAddr ? this.mochimoAddr.getAddrHash() : null;
     }
 
 
