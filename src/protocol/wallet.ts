@@ -238,7 +238,6 @@ export class WOTSWallet implements WOTSWalletJSON {
         let private_seed = secret;
         let sourcePK: ByteArray | null = null;
         const defaultTag = Buffer.from('420000000e00000001000000', 'hex');
-        console.log(defaultTag.length);
         if (randomGenerator) {
             sourcePK = WOTS.generateRandomAddress(defaultTag, secret, randomGenerator);
         } else {
