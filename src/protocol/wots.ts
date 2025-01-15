@@ -225,11 +225,12 @@ export class WOTS {
 
 
         // Apply tag if provided using Tag.tag
+
         const readyAddress = tag ? Tag.tag(sourceAddress, tag) : sourceAddress;
 
         // Validate address
         for (let i = 0; i < 10; i++) {
-            if (!this.isValid(components.private_seed, readyAddress, randomGenerator)) {
+            if (!this.isValid(components.private_seed, readyAddress, randomBytes)) {
                 throw new Error('Invalid WOTS');
             }
         }
@@ -317,30 +318,24 @@ export class WOTS {
     /**
      * Validates a WOTS address using a Random generator
      */
-    static isValid(secret: ByteArray, address: ByteArray, random = randomGenerator): boolean {
+    static isValid(secret: ByteArray, address: ByteArray, random = randomBytes): boolean {
         const pk = new Uint8Array(2144);
         const pubSeed = new Uint8Array(32);
         const rnd2 = new Uint8Array(32);
 
         this.splitAddress(address, pk, pubSeed, rnd2, null);
-        return this.isValidWithComponents(secret, pk, pubSeed, rnd2, randomGenerator);
+        return this.isValidWithComponents(secret, pk, pubSeed, rnd2, randomBytes);
     }
 
-    /**
-     * Generates a WOTS address using SecureRandom
-     */
-    static generateRandomAddress(tag: ByteArray | null, secret: ByteArray): ByteArray {
-        return this.generateRandomAddress_(tag, secret, randomGenerator);
-    }
 
     /**
      * Generates a random WOTS address using the randomGenerator
      * Note:: use you own randomGenerator that fills in deterministic bytes if you want to generate a specific address
      */
-    static generateRandomAddress_(
+    static generateRandomAddress(
         tag: ByteArray | null,
         secret: ByteArray,
-        randomGenerator: (bytes: ByteArray) => void
+        randomGenerator: (bytes: ByteArray) => void = randomBytes
     ): ByteArray {
         if (secret.length !== 32) {
             throw new Error('Invalid secret length');
@@ -381,7 +376,7 @@ export class WOTS {
 
 }
 
-function randomGenerator(bytes: ByteArray): void {
+function randomBytes(bytes: ByteArray): void {
     for (let i = 0; i < bytes.length; i++) {
         bytes[i] = Math.floor(Math.random() * 256);
     }

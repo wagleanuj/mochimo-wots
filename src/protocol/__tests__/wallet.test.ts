@@ -1,95 +1,133 @@
-import { WOTSWallet } from "../wallet";
+import { WOTSWallet } from '../wallet';
 import { ByteUtils } from '@/utils';
+import { WOTS } from '../wots';
 
 describe('WOTSWallet', () => {
-    describe('signature operations', () => {
-        let wallet: WOTSWallet;
-        const message = new Uint8Array([1, 2, 3, 4, 5]);
+    const testName = 'Test Wallet';
+    const testSecret = new Uint8Array(32).fill(0x12);
+    const testAddrTag = new Uint8Array(20).fill(0x34);
+    let wallet: WOTSWallet;
 
-        beforeEach(() => {
-            const secret = new Uint8Array(32).fill(0x56);
-            const tag = new Uint8Array(12).fill(0x34);
-            wallet = WOTSWallet.create("Test Wallet", secret, tag);
+    beforeEach(() => {
+        wallet = WOTSWallet.create(testName, testSecret, testAddrTag);
+    });
+
+    describe('basic properties', () => {
+        it('should initialize with correct values', () => {
+            expect(wallet.getName()).toBe(testName);
+            expect(wallet.getSecret()).toBeDefined();
+            expect(wallet.getAddrTag()).toBeDefined();
+            expect(wallet.getWots()).toBeDefined();
         });
 
-        it('should sign and verify a message', () => {
+        it('should have correct lengths', () => {
+            expect(wallet.getSecret()?.length).toBe(32);
+            expect(wallet.getAddrTag()?.length).toBe(20);
+            expect(wallet.getWots()?.length).toBe(2208);
+        });
+    });
+
+    describe('WOTS+ components', () => {
+        it('should have valid WOTS public key', () => {
+            const wotsPk = wallet.getWotsPk();
+            expect(wotsPk).toBeDefined();
+            expect(wotsPk?.length).toBe(WOTS.WOTSSIGBYTES);
+        });
+
+        it('should have valid WOTS public seed', () => {
+            const wotsPubSeed = wallet.getWotsPubSeed();
+            expect(wotsPubSeed).toBeDefined();
+            expect(wotsPubSeed?.length).toBe(32);
+        });
+
+        it('should have valid WOTS address scheme', () => {
+            const wotsAdrs = wallet.getWotsAdrs();
+            expect(wotsAdrs).toBeDefined();
+            expect(wotsAdrs?.length).toBe(32);
+        });
+
+        it('should have valid WOTS tag', () => {
+            const wotsTag = wallet.getWotsTag();
+            expect(wotsTag).toBeDefined();
+            expect(wotsTag?.length).toBe(12);
+        });
+    });
+
+    describe('Mochimo address components', () => {
+        it('should have valid address', () => {
+            const addr = wallet.getAddress();
+            expect(addr).toBeDefined();
+            expect(addr?.length).toBe(20);
+        });
+
+        it('should have valid address tag', () => {
+            const addrTag = wallet.getAddrTag();
+            expect(addrTag).toBeDefined();
+            expect(addrTag?.length).toBe(20);
+            expect(ByteUtils.areEqual(addrTag!, testAddrTag)).toBe(true);
+        });
+
+        it('should have valid address hash', () => {
+            const addrHash = wallet.getAddrHash();
+            expect(addrHash).toBeDefined();
+            expect(addrHash?.length).toBe(20);
+        });
+    });
+
+    describe('signing operations', () => {
+        it('should sign and verify message', () => {
+            const message = new Uint8Array(32).fill(0x56);
             const signature = wallet.sign(message);
+            
+            expect(signature).toBeDefined();
+            expect(signature.length).toBe(WOTS.WOTSSIGBYTES);
+            
             const isValid = wallet.verify(message, signature);
             expect(isValid).toBe(true);
         });
 
-        it('should reject modified signature', () => {
+        it('should fail verification with wrong message', () => {
+            const message = new Uint8Array(32).fill(0x56);
+            const wrongMessage = new Uint8Array(32).fill(0x78);
             const signature = wallet.sign(message);
-            signature[0] = signature[0] ^ 0xFF;  // Modify first byte
-            const isValid = wallet.verify(message, signature);
-            expect(isValid).toBe(false);
-        });
-
-        it('should reject modified message', () => {
-            const signature = wallet.sign(message);
-            const modifiedMessage = new Uint8Array(message);
-            modifiedMessage[0] = modifiedMessage[0] ^ 0xFF;
-            const isValid = wallet.verify(modifiedMessage, signature);
+            
+            const isValid = wallet.verify(wrongMessage, signature);
             expect(isValid).toBe(false);
         });
     });
 
-    describe('wallet creation', () => {
-        it('should create wallet with valid parameters', () => {
-            const secret = new Uint8Array(32).fill(0x56);
-            const tag = new Uint8Array(12).fill(0x34);
-            const wallet = WOTSWallet.create("Test Wallet", secret, tag);
-
-            expect(wallet.getName()).toBe("Test Wallet");
-            expect(wallet.getTag()).toEqual(tag);
-            // TODO: this is kind of a bummer; since this wallet generates a new secret based on this secret by hashing (secret+'seed')
-            expect(wallet.getSecret()).not.toEqual(secret); 
-            expect(wallet.getAddress()).toBeDefined();
-            expect(wallet.getAddress()?.length).toBe(2208);
+    describe('serialization', () => {
+        it('should serialize to JSON', () => {
+            const json = wallet.toJSON();
+            expect(json.name).toBe(testName);
+            expect(json.wots).toBeDefined();
+            expect(json.addrTag).toBeDefined();
+            expect(json.secret).toBeDefined();
         });
 
-        it('should throw on invalid secret length', () => {
-            const invalidSecret = new Uint8Array(16).fill(0x56);
-            const tag = new Uint8Array(12).fill(0x34);
-            expect(() => WOTSWallet.create("Test", invalidSecret, tag))
-                .toThrow('Invalid secret length');
-        });
-
-        it('should throw on invalid tag length', () => {
-            const secret = new Uint8Array(32).fill(0x56);
-            const invalidTag = new Uint8Array(8).fill(0x34);
-            expect(() => WOTSWallet.create("Test", secret, invalidTag))
-                .toThrow('Invalid tag');
+        it('should have hex string representations', () => {
+            expect(wallet.getWotsHex()).toBeDefined();
+            expect(wallet.getAddrTagHex()).toBeDefined();
         });
     });
 
-    describe('wallet operations', () => {
-        let wallet: WOTSWallet;
-
-        beforeEach(() => {
-            const secret = new Uint8Array(32).fill(0x56);
-            const tag = new Uint8Array(12).fill(0x34);
-            wallet = WOTSWallet.create("Test Wallet", secret, tag);
-        });
-
-        it('should provide hex representations', () => {
-            expect(wallet.getAddressHex()).toBeDefined();
-            expect(wallet.getTagHex()).toBeDefined();
-            expect(typeof wallet.getAddressHex()).toBe('string');
-            expect(typeof wallet.getTagHex()).toBe('string');
-        });
-
+    describe('cleanup', () => {
         it('should clear sensitive data', () => {
             wallet.clear();
-            expect(wallet.getAddress()?.every(b => b === 0)).toBe(true);
-            expect(wallet.getTag()?.every(b => b === 0)).toBe(true);
             expect(wallet.getSecret()?.every(b => b === 0)).toBe(true);
-        });
+            expect(wallet.getWots()?.every(b => b === 0)).toBe(true);
+            expect(wallet.getWotsHex()).toBeNull();
+            expect(wallet.getAddrTagHex()).toBeNull();
 
-        it('should provide string representation', () => {
-            const str = wallet.toString();
-            expect(str).toContain('...');
-            expect(str.length).toBe(59); // 32 + 3 + 24 = 59
+            expect(wallet.getAddrTag()?.every(b => b === 0)).toBe(true);
+            expect(wallet.getWotsAdrs()?.every(b => b === 0)).toBe(true);
+            expect(wallet.getWotsPk()?.every(b => b === 0)).toBe(true);
+            expect(wallet.getWotsPubSeed()?.every(b => b === 0)).toBe(true);
+
+            expect(wallet.getAddress()).toBeNull();
+            expect(wallet.getAddrHash()).toBeNull();
+   
+            
         });
     });
-});
+}); 

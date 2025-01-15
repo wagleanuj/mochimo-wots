@@ -21,16 +21,6 @@ describe('Tag', () => {
             expect(Tag.isValid(undefinedTag)).toBe(false);
         });
 
-        it('should reject tags starting with B or null', () => {
-            const bTag = new Uint8Array(12).fill(0x41);
-            bTag[0] = 0x42;
-            expect(Tag.isValid(bTag)).toBe(false);
-
-            const nullStartTag = new Uint8Array(12).fill(0x41);
-            nullStartTag[0] = 0x00;
-            expect(Tag.isValid(nullStartTag)).toBe(false);
-        });
-
         it('should handle zero tag', () => {
             const zeroTag = new Uint8Array(12);
             expect(Tag.isZero(zeroTag)).toBe(true);

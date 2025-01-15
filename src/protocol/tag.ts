@@ -36,8 +36,7 @@ export class Tag {
         if (!tag || tag.length !== Tag.TAG_LENGTH) {
             return false;
         }
-
-        return (tag[0] !== 66 && tag[0] !== 0);
+        return true;
     }
 
     /**

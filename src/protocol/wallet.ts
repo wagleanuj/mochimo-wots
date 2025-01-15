@@ -2,74 +2,140 @@ import { ByteArray } from '@/types/byte-buffer';
 import { ByteUtils } from '@/utils/byte-utils';
 import { WOTS } from './wots';
 import { MochimoHasher } from '@/hasher/mochimo-hasher';
+import { WotsAddress } from './wots-addr';
 
 
 interface WOTSWalletParams {
     name?: string | null;
-    address?: ByteArray | null;
-    tag?: ByteArray | null;
-    secret?: ByteArray | null;
+    wots?: ByteArray | null; //wots address 2208 bytes
+    addrTag?: ByteArray | null; //address tag 20 bytes
+    secret?: ByteArray | null; //secret key 32 bytes
 }
 
 interface WOTSWalletJSON {
     name?: string | null;
-    address?: ByteArray | null;
-    tag?: ByteArray | null;
+    wots?: ByteArray | null;
+    addrTag?: ByteArray | null;
     secret?: ByteArray | null;
-    tagHex?: string | null;
-    addressHex?: string | null;
+    addrTagHex?: string | null;
+    wotsAddrHex?: string | null;
 }
 
 /**
- * WOTS Wallet Implementation
+ * WOTS Wallet Implementation in V3
  */
 export class WOTSWallet implements WOTSWalletJSON {
     public readonly name: string | null;
-    public readonly address: ByteArray | null;
-    public addressHex: string | null;
-    public readonly tag: ByteArray | null;
-    public tagHex: string | null;
+    public readonly wots: ByteArray | null;
+    public wotsAddrHex: string | null;
+    public readonly addrTag: ByteArray | null;
+    public addrTagHex: string | null;
     public readonly secret: ByteArray | null;
+    public mochimoAddr: WotsAddress | null;
 
     /**
      * Creates a new WOTS wallet
      */
     private constructor({
         name = null,
-        address = null,
-        tag = null,
+        wots = null,
+        addrTag = null,
         secret = null
     }: WOTSWalletParams) {
+        if (secret && secret.length !== 32) {
+            throw new Error('Invalid secret length');
+        }
+        if (addrTag && addrTag.length !== 20) {
+            throw new Error('Invalid address tag');
+        }
         this.name = name;
-        this.address = address;
-        this.tag = tag;
+        this.wots = wots;
+        this.addrTag = addrTag;
         this.secret = secret;
 
 
         // Initialize hex strings
-        this.addressHex = this.address ? ByteUtils.bytesToHex(this.address) : null;
-        this.tagHex = this.tag ? ByteUtils.bytesToHex(this.tag) : null;
+        this.wotsAddrHex = this.wots ? ByteUtils.bytesToHex(this.wots) : null;
+        this.addrTagHex = this.addrTag ? ByteUtils.bytesToHex(this.addrTag) : null;
+        // Mochimo address
+        this.mochimoAddr = this.wots ? WotsAddress.wotsAddressFromBytes(this.wots) : null;
+        this.mochimoAddr?.setTag(this.addrTag!);
     }
 
     getName() {
         return this.name;
     }
 
+
+
+    /**
+     * Get the full wots address (2208 bytes)
+     * @returns 
+     */
+    getWots(): ByteArray | null {
+        return this.wots ? new Uint8Array(this.wots) : null;
+    }
+
+    /**
+    * Get the hex string of the full wots address
+    */
+    getWotsHex(): string | null {
+        return this.wotsAddrHex;
+    }
+
+    /**
+     * Get the wots public key (2144 bytes)
+     */
+    getWotsPk(): ByteArray | null {
+        return this.wots ? new Uint8Array(this.wots.slice(0, WOTS.WOTSSIGBYTES)) : null;
+    }
+    /**
+    * Get the public seed used when generating the wots address
+    */
+    getWotsPubSeed(): ByteArray | null {
+        return this.wots ? this.wots.subarray(WOTS.WOTSSIGBYTES, WOTS.WOTSSIGBYTES + 32) : null;
+    }
+
+    /**
+    * Get the wots+ address scheme used when generating the address
+    */
+    getWotsAdrs(): ByteArray | null {
+        return this.wots ? this.wots.subarray(WOTS.WOTSSIGBYTES + 32, WOTS.WOTSSIGBYTES + 64) : null;
+    }
+
+    /**
+     * Get the wots+ tag used when generating the address
+     */
+    getWotsTag(): ByteArray | null {
+        return this.wots ? this.wots.subarray(WOTS.WOTSSIGBYTES + 64-12, WOTS.WOTSSIGBYTES + 64) : null;
+    }
+
+    /**
+     * Get the 20 byte mochimo address 
+     */
     getAddress(): ByteArray | null {
-        return this.address ? new Uint8Array(this.address) : null;
+        return this.mochimoAddr ? this.mochimoAddr.getAddress() : null;
     }
 
-    getAddressHex(): string | null {
-        return this.addressHex;
+    /**
+     * Get the address tag (20 bytes)
+     */
+    getAddrTag(): ByteArray | null {
+        return this.addrTag ? new Uint8Array(this.addrTag) : null;
     }
 
-    getTag(): ByteArray | null {
-        return this.tag ? new Uint8Array(this.tag) : null;
+    getAddrTagHex(): string | null {
+        return this.addrTagHex;
     }
 
-    getTagHex(): string | null {
-        return this.tagHex;
+    /**
+     * Get the address hash of mochimo address (40 bytes), [20 bytes tag + 20 bytes address]
+     */
+    getAddrHash(): ByteArray | null {
+        return this.mochimoAddr ? this.mochimoAddr.getAddress() : null;
     }
+
+
 
     getSecret(): ByteArray | null {
         return this.secret ? new Uint8Array(this.secret) : null;
@@ -81,12 +147,10 @@ export class WOTSWallet implements WOTSWalletJSON {
 
     /**
      * Sign data using the secret key
-     * @param data 
-     * @returns 
      */
     sign(data: ByteArray): ByteArray {
         const sourceSeed = this.secret;
-        const sourceWots = this.address;
+        const sourceWots = this.wots;
         if (!sourceSeed || !sourceWots) {
             throw new Error('Cannot sign without secret key or address');
         }
@@ -103,18 +167,16 @@ export class WOTSWallet implements WOTSWalletJSON {
         WOTS.wots_sign(sig, data, sourceSeed, pubSeed, 0, rnd2);
         return sig;
     }
+
     /**
      * Verifies whether a signature is valid for a given message
-     * @param message 
-     * @param signature 
-     * @returns 
      */
 
     verify(message: ByteArray, signature: ByteArray): boolean {
-        if (!this.address) {
+        if (!this.wots) {
             throw new Error('Cannot verify without public key (address)');
         }
-        const srcAddr = this.address;
+        const srcAddr = this.wots;
         const pk = srcAddr.subarray(0, WOTS.WOTSSIGBYTES);
         const pubSeed = srcAddr.subarray(WOTS.WOTSSIGBYTES, WOTS.WOTSSIGBYTES + 32);
         const rnd2 = srcAddr.subarray(WOTS.WOTSSIGBYTES + 32, WOTS.WOTSSIGBYTES + 64);
@@ -143,46 +205,59 @@ export class WOTSWallet implements WOTSWalletJSON {
 
     clear(): void {
         // Clear copies
-
         if (this.secret) ByteUtils.clear(this.secret);
-        if (this.address) ByteUtils.clear(this.address);
-        if (this.tag) ByteUtils.clear(this.tag);
-        if (this.tagHex) this.tagHex = null;
-        if (this.addressHex) this.addressHex = null;
+        if (this.wots) ByteUtils.clear(this.wots);
+        if (this.addrTag) ByteUtils.clear(this.addrTag);
+        if (this.addrTagHex) this.addrTagHex = null;
+        if (this.wotsAddrHex) this.wotsAddrHex = null;
+        if(this.mochimoAddr) this.mochimoAddr = null;
     }
 
     toString(): string {
         let str = 'Empty address';
-        if (this.addressHex) {
-            str = `${this.addressHex.substring(0, 32)}...${this.addressHex.substring(this.addressHex.length - 24)}`;
-        } else if (this.tagHex) {
-            str = `tag-${this.tagHex}`;
+        if (this.wotsAddrHex) {
+            str = `${this.wotsAddrHex.substring(0, 32)}...${this.wotsAddrHex.substring(this.wotsAddrHex.length - 24)}`;
+        } else if (this.addrTagHex) {
+            str = `tag-${this.addrTagHex}`;
         }
         return str;
     }
-    toJSON(): WOTSWalletJSON {
-        return {
-            name: this.name,
-            address: this.address,
-            tag: this.tag,
-            secret: this.secret,
-            tagHex: this.tagHex,
-            addressHex: this.addressHex
-        }
-    }
 
-    static create(name: string, secret: ByteArray, tag: ByteArray) {
+    /**
+     * Creates a wallet instance
 
+     */
+
+    static create(name: string, secret: ByteArray, v3tag: ByteArray, randomGenerator?: (bytes: ByteArray) => void) {
         if (secret.length !== 32) {
             throw new Error('Invalid secret length');
         }
-        if (tag !== null && tag.length !== 12) {
+        if (v3tag.length !== 20) {
             throw new Error('Invalid tag');
         }
-        const { private_seed } = this.componentsGenerator(secret);
-        const sourcePK = WOTS.generateAddress(tag, secret, this.componentsGenerator);
-        const ww = new WOTSWallet({ name, address: sourcePK, tag, secret: private_seed });
+        let private_seed = secret;
+        let sourcePK: ByteArray | null = null;
+        const defaultTag = Buffer.from('420000000e00000001000000', 'hex');
+        console.log(defaultTag.length);
+        if (randomGenerator) {
+            sourcePK = WOTS.generateRandomAddress(defaultTag, secret, randomGenerator);
+        } else {
+            ({ private_seed } = this.componentsGenerator(secret));
+            sourcePK = WOTS.generateAddress(defaultTag, secret, this.componentsGenerator);
+        }
+        const ww = new WOTSWallet({ name, wots: sourcePK, addrTag: v3tag, secret: private_seed });
         return ww;
+    }
+
+    toJSON(): WOTSWalletJSON {
+        return {
+            name: this.name,
+            wots: this.wots,
+            addrTag: this.addrTag,
+            secret: this.secret,
+            addrTagHex: this.addrTagHex,
+            wotsAddrHex: this.wotsAddrHex
+        }
     }
 
 }
