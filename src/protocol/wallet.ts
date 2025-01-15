@@ -107,7 +107,7 @@ export class WOTSWallet implements WOTSWalletJSON {
      * Get the wots+ tag used when generating the address
      */
     getWotsTag(): ByteArray | null {
-        return this.wots ? this.wots.subarray(WOTS.WOTSSIGBYTES + 64-12, WOTS.WOTSSIGBYTES + 64) : null;
+        return this.wots ? this.wots.subarray(WOTS.WOTSSIGBYTES + 64 - 12, WOTS.WOTSSIGBYTES + 64) : null;
     }
 
     /**
@@ -210,7 +210,7 @@ export class WOTSWallet implements WOTSWalletJSON {
         if (this.addrTag) ByteUtils.clear(this.addrTag);
         if (this.addrTagHex) this.addrTagHex = null;
         if (this.wotsAddrHex) this.wotsAddrHex = null;
-        if(this.mochimoAddr) this.mochimoAddr = null;
+        if (this.mochimoAddr) this.mochimoAddr = null;
     }
 
     toString(): string {
@@ -227,14 +227,11 @@ export class WOTSWallet implements WOTSWalletJSON {
      * Creates a wallet instance
 
      */
-
-    static create(name: string, secret: ByteArray, v3tag: ByteArray, randomGenerator?: (bytes: ByteArray) => void) {
+    static create(name: string, secret: ByteArray, v3tag?: ByteArray, randomGenerator?: (bytes: ByteArray) => void) {
         if (secret.length !== 32) {
             throw new Error('Invalid secret length');
         }
-        if (v3tag.length !== 20) {
-            throw new Error('Invalid tag');
-        }
+
         let private_seed = secret;
         let sourcePK: ByteArray | null = null;
         const defaultTag = Buffer.from('420000000e00000001000000', 'hex');
@@ -243,6 +240,13 @@ export class WOTSWallet implements WOTSWalletJSON {
         } else {
             ({ private_seed } = this.componentsGenerator(secret));
             sourcePK = WOTS.generateAddress(defaultTag, secret, this.componentsGenerator);
+        }
+        if (!v3tag) {
+            //generate a v3 tag for this address
+            v3tag = WotsAddress.wotsAddressFromBytes(sourcePK).getTag();
+        }
+        if (v3tag.length !== 20) {
+            throw new Error('Invalid tag');
         }
         const ww = new WOTSWallet({ name, wots: sourcePK, addrTag: v3tag, secret: private_seed });
         return ww;
