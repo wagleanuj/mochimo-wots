@@ -1,6 +1,6 @@
 {
   "name": "mochimo-wots",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "TypeScript implementation of Mochimo WOTS for v3",
   "main": "dist/index.umd.js",
   "module": "dist/index.es.js",
@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wagleanuj/mochimo-wots-v2.git"
+    "url": "git+https://github.com/wagleanuj/mochimo-wots.git"
   },
   "keywords": [
     "cryptocurrency",
@@ -34,9 +34,9 @@
   "author": "Anuj Wagle",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/wagleanuj/mochimo-wots-v2/issues"
+    "url": "https://github.com/wagleanuj/mochimo-wots/issues"
   },
-  "homepage": "https://github.com/wagleanuj/mochimo-wots-v2#readme",
+  "homepage": "https://github.com/wagleanuj/mochimo-wots#readme",
   "devDependencies": {
     "@types/jest": "^29.5.14",
     "@types/node": "^18.0.0",
