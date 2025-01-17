@@ -14,12 +14,6 @@ export function addrTagToBase58(addrTag: ByteArray): string | null {
     combined.set(csumBytes, addrTag.length);
 
     const result = bs58.encode(combined);
-    console.log({
-        addrTag: Buffer.from(addrTag).toString('hex'),
-        csum: csum,
-        csumBytes,
-        result
-    });
     return result;
 }
 
@@ -40,4 +34,10 @@ export function validateBase58Tag(tag: string): boolean {
         // Return false for any decoding errors
         return false;
     }
+}
+
+export function base58ToAddrTag(tag: string): ByteArray | null {
+    const decoded = bs58.decode(tag);
+    if (decoded.length !== 22) throw new Error('Invalid base58 tag length');
+    return decoded.subarray(0, 20);
 }

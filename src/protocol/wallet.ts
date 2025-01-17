@@ -49,10 +49,11 @@ export class WOTSWallet implements WOTSWalletJSON {
         if (addrTag && addrTag.length !== 20) {
             throw new Error('Invalid address tag');
         }
+        //create copies of the array so that when we clear the wallet, it only clears the copies
         this.name = name;
-        this.wots = wots;
-        this.addrTag = addrTag;
-        this.secret = secret;
+        this.wots = wots ? new Uint8Array(wots) : null;
+        this.addrTag = addrTag ? new Uint8Array(addrTag) : null;
+        this.secret = secret ? new Uint8Array(secret) : null;
 
 
         // Initialize hex strings
@@ -129,8 +130,8 @@ export class WOTSWallet implements WOTSWalletJSON {
         return this.addrTagHex;
     }
 
-    getAddrTagBase64(): string | null {
-        return addrTagToBase58(this.getAddrTag()!);
+    getAddrTagBase58(): string | null {
+        return this.addrTag ? addrTagToBase58(this.getAddrTag()!) : null;
     }
 
     /**

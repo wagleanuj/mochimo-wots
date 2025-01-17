@@ -1,4 +1,4 @@
-import { addrTagToBase58, validateBase58Tag } from '../tag-utils';
+import { addrTagToBase58, base58ToAddrTag, validateBase58Tag } from '../tag-utils';
 import bs58 from 'bs58';
 
 describe('Tag Utils', () => {
@@ -89,6 +89,51 @@ describe('Tag Utils', () => {
         it('should handle undefined/null', () => {
             expect(validateBase58Tag(undefined as any)).toBe(false);
             expect(validateBase58Tag(null as any)).toBe(false);
+        });
+    });
+
+    describe('base58ToAddrTag', () => {
+        it('should decode test vectors correctly', () => {
+            for (const vector of testVectors) {
+                const tagBytes = Buffer.from(vector.tag, 'hex');
+                const base58Tag = addrTagToBase58(tagBytes);
+                const decoded = base58ToAddrTag(base58Tag!);
+                
+                expect(Buffer.from(decoded!).toString('hex'))
+                    .toBe(vector.tag);
+            }
+        });
+
+        it('should throw for invalid length', () => {
+            const invalidTag = bs58.encode(Buffer.from('deadbeef', 'hex'));
+            expect(() => base58ToAddrTag(invalidTag))
+                .toThrow('Invalid base58 tag length');
+        });
+
+        it('should throw for invalid base58', () => {
+            expect(() => base58ToAddrTag('not-base58!'))
+                .toThrow();
+        });
+
+        it('should be reversible', () => {
+            const tagBytes = Buffer.from(testVectors[0].tag, 'hex');
+            const base58Tag = addrTagToBase58(tagBytes);
+            const decoded = base58ToAddrTag(base58Tag!);
+            const reEncoded = addrTagToBase58(decoded!);
+            
+            expect(reEncoded).toBe(base58Tag);
+        });
+
+        it('should handle empty string', () => {
+            expect(() => base58ToAddrTag(''))
+                .toThrow();
+        });
+
+        it('should handle undefined/null', () => {
+            expect(() => base58ToAddrTag(undefined as any))
+                .toThrow();
+            expect(() => base58ToAddrTag(null as any))
+                .toThrow();
         });
     });
 }); 

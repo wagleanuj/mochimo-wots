@@ -1,6 +1,7 @@
 import { WOTSWallet } from '../wallet';
 import { ByteUtils, crc } from '@/utils';
 import { WOTS } from '../wots';
+import { base58ToAddrTag } from '@/utils/tag-utils';
 
 describe('WOTSWallet', () => {
     const testName = 'Test Wallet';
@@ -231,23 +232,26 @@ describe('WOTSWallet', () => {
 
     describe('address tag base64', () => {
         it('should generate valid base64 tag with checksum', () => {
-            const wallet = WOTSWallet.create(testName, testSecret, testAddrTag);
-            const base64Tag = wallet.getAddrTagBase64();
-            
-            expect(base64Tag).toBeDefined();
-            
-            // Decode and verify
-            const decoded = Buffer.from(base64Tag!, 'base64');
-            expect(decoded.length).toBe(22); // 20 bytes tag + 2 bytes CRC
+            const wallet = WOTSWallet.create(testName, testSecret, new Uint8Array(testAddrTag));
+            const b58Tag = wallet.getAddrTagBase58();
+            expect(wallet.getAddrTagHex()).toBe(Buffer.from(testAddrTag).toString('hex'));
+            console.log(Buffer.from(wallet.getAddrTag()!).toString('hex'));
+            expect(b58Tag).toBeDefined();
+            expect(ByteUtils.areEqual(
+                wallet.getAddrTag()!,
+                testAddrTag
+            )).toBe(true);
+
+            expect(b58Tag!).toBe("J8gqYehTJhJWrfcUd766sUQ8THktNs"); // 20 bytes tag + 2 bytes CRC
             
             // Check that first 20 bytes match the original tag
             expect(ByteUtils.areEqual(
-                decoded.slice(0, 20),
+                base58ToAddrTag(b58Tag!)!,
                 testAddrTag
             )).toBe(true);
-            
+                
             // Verify CRC
-            const actualCrc = decoded.readUInt16LE(20);
+            const actualCrc = crc(base58ToAddrTag(b58Tag!)!, 0, 20);
             const expectedCrc = crc(testAddrTag, 0, 20);
             expect(actualCrc).toBe(expectedCrc);
         });
@@ -255,7 +259,8 @@ describe('WOTSWallet', () => {
         it('should return null for missing tag', () => {
             const wallet = WOTSWallet.create(testName, testSecret);
             wallet.clear(); // Clear the auto-generated tag
-            expect(wallet.getAddrTagBase64()).toBeNull();
+            //when bytes are cleared, it fills tag uint8array with 0
+            expect(wallet.getAddrTagBase58()).toBe("1111111111111111111111");
         });
 
         it('should throw for invalid tag length', () => {
@@ -264,7 +269,7 @@ describe('WOTSWallet', () => {
             (wallet as any).addrTag = new Uint8Array(10);
             
             expect(() => {
-                wallet.getAddrTagBase64();
+                wallet.getAddrTagBase58();
             }).toThrow('Invalid address tag length');
         });
 
@@ -272,8 +277,8 @@ describe('WOTSWallet', () => {
             const wallet1 = WOTSWallet.create(testName, testSecret, testAddrTag);
             const wallet2 = WOTSWallet.create(testName, testSecret, testAddrTag);
             
-            const base64Tag1 = wallet1.getAddrTagBase64();
-            const base64Tag2 = wallet2.getAddrTagBase64();
+            const base64Tag1 = wallet1.getAddrTagBase58();
+            const base64Tag2 = wallet2.getAddrTagBase58();
             
             expect(base64Tag1).toBe(base64Tag2);
         });
