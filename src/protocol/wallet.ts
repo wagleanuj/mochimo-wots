@@ -3,6 +3,7 @@ import { ByteUtils } from '@/utils/byte-utils';
 import { WOTS } from './wots';
 import { MochimoHasher } from '@/hasher/mochimo-hasher';
 import { WotsAddress } from './wots-addr';
+import { addrTagToBase58 } from '@/utils/tag-utils';
 
 
 interface WOTSWalletParams {
@@ -126,6 +127,10 @@ export class WOTSWallet implements WOTSWalletJSON {
 
     getAddrTagHex(): string | null {
         return this.addrTagHex;
+    }
+
+    getAddrTagBase64(): string | null {
+        return addrTagToBase58(this.getAddrTag()!);
     }
 
     /**
@@ -266,6 +271,7 @@ export class WOTSWallet implements WOTSWalletJSON {
             wotsAddrHex: this.wotsAddrHex
         }
     }
+    
 
 }
 
