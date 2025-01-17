@@ -6,6 +6,8 @@ export { WOTSWallet } from './protocol/wallet';
 // ByteBuffer utilities
 export { ByteBuffer, ByteOrder } from './types/byte-buffer';
 export type { ByteArray, HexString } from './types/byte-buffer';
+//tag utils
+export * as TagUtils from './utils/tag-utils';
 
 // Hasher
 export { MochimoHasher } from './hasher/mochimo-hasher';
