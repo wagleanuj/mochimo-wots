@@ -230,8 +230,8 @@ describe('WOTSWallet', () => {
         });
     });
 
-    describe('address tag base64', () => {
-        it('should generate valid base64 tag with checksum', () => {
+    describe('address tag base58', () => {
+        it('should generate valid base58 tag with checksum', () => {
             const wallet = WOTSWallet.create(testName, testSecret, new Uint8Array(testAddrTag));
             const b58Tag = wallet.getAddrTagBase58();
             expect(wallet.getAddrTagHex()).toBe(Buffer.from(testAddrTag).toString('hex'));
@@ -273,14 +273,14 @@ describe('WOTSWallet', () => {
             }).toThrow('Invalid address tag length');
         });
 
-        it('should generate consistent base64 for same tag', () => {
+        it('should generate consistent base58 for same tag', () => {
             const wallet1 = WOTSWallet.create(testName, testSecret, testAddrTag);
             const wallet2 = WOTSWallet.create(testName, testSecret, testAddrTag);
             
-            const base64Tag1 = wallet1.getAddrTagBase58();
-            const base64Tag2 = wallet2.getAddrTagBase58();
+            const base58Tag1 = wallet1.getAddrTagBase58();
+            const base58Tag2 = wallet2.getAddrTagBase58();
             
-            expect(base64Tag1).toBe(base64Tag2);
+            expect(base58Tag1).toBe(base58Tag2);
         });
     });
 
